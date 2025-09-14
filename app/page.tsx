@@ -515,29 +515,30 @@ export default function AlphaPointsCalculator() {
   };
 
   return (
-    <div className="font-sans min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 sm:p-8">
-      <header className="max-w-4xl mx-auto mb-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-4">
-          <div className="flex items-center mb-4 sm:mb-0">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+      {/* 头部 */}
+      <header className="bg-white dark:bg-slate-800 shadow">
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="flex items-center mb-3 sm:mb-0">
             <Image
               src="/next.svg"
               alt="Next.js logo"
-              width={48}
-              height={48}
-              className="mr-3"
+              width={36}
+              height={36}
+              className="mr-2 sm:mr-3 sm:w-12 sm:h-12"
             />
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               币安 Alpha 积分计算器
             </h1>
           </div>
-
+      
           {/* 账号管理 */}
-          <div className="flex items-center space-x-2 flex-wrap">
+          <div className="flex flex-wrap gap-2 w-full">
             {/* 账号选择器 */}
             <select
               value={currentAccountId}
               onChange={(e) => switchAccount(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 flex-grow border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
               {accounts.map(account => (
                 <option key={account.id} value={account.id}>
@@ -547,176 +548,107 @@ export default function AlphaPointsCalculator() {
             </select>
 
             {/* 删除账号按钮 */}
-            <button
-              onClick={() => deleteAccount(currentAccountId)}
-              className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              aria-label="删除账号"
-            >
-              删除
-            </button>
+            {accounts.length > 1 && (
+              <button
+                onClick={() => deleteAccount(currentAccountId)}
+                className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm"
+              >
+                删除账号
+              </button>
+            )}
 
             {/* 添加账号按钮 */}
             <button
               onClick={() => setShowAddAccountModal(true)}
-              className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-              aria-label="添加账号"
+              className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
             >
               添加账号
             </button>
 
             {/* 导出数据按钮 */}
             <button
-              onClick={() => exportData()}
-              className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors"
-              aria-label="导出数据"
+              onClick={exportData}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm transition-colors text-sm whitespace-nowrap"
             >
               导出数据
             </button>
 
             {/* 导入数据按钮 */}
             <label
-              htmlFor={`import-file-${fileInputKey}`}
-              className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors cursor-pointer"
-              aria-label="导入数据"
+              htmlFor="import-data"
+              className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg shadow-sm transition-colors text-sm cursor-pointer whitespace-nowrap"
             >
               导入数据
             </label>
             <input
-              id={`import-file-${fileInputKey}`}
               type="file"
+              id="import-data"
               accept=".json"
-              onChange={(e) => importData(e)}
+              onChange={importData}
               className="hidden"
               key={fileInputKey}
             />
           </div>
         </div>
-
-        <p className="text-slate-600 dark:text-slate-300 text-lg text-center">
-          每天可获取 16 积分，积分统计周期为最近 15 天
-        </p>
-
-        {/* 当前账号显示 */}
-        {currentAccount && (
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 text-center">
-            当前账号: {currentAccount.name}
-          </p>
-        )}
-
-        {/* 所有账号汇总信息 */}
-        <div className="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-md p-4">
-          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">所有账号汇总</h3>
+        
+        {/* 目标积分进度 */}
+        <div className="container mx-auto px-4 py-3 border-t border-slate-200 dark:border-slate-700">
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-slate-100 dark:bg-slate-700">
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">账号名称</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">当前积分</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">目标积分</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">距离目标</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {accounts.map(account => {
-                  // 计算该账号的总积分
-                  const accountTotalPoints = account.pointsHistory.reduce((sum, day) => sum + day.points, 0);
-                  
-                  // 计算距离目标所需天数（考虑积分过期）
-                  let accountDaysToTarget = null;
-                  if (account.targetPoints && !isNaN(parseInt(account.targetPoints))) {
-                    const target = parseInt(account.targetPoints);
-                    if (target <= accountTotalPoints) {
-                      accountDaysToTarget = 0; // 表示已达成
-                    } else {
-                      // 先使用简单计算作为默认值，防止显示"计算中..."
-                      const simpleDaysToTarget = Math.ceil((target - accountTotalPoints) / 16);
-                      accountDaysToTarget = simpleDaysToTarget;
-                       
-                      try {
-                        // 模拟积分过期的复杂计算
-                        let averagePointsPerDay = 16; // 默认值
-                        
-                        // 只保留最近15天的有效积分
-                        const recentValidPoints = [...account.pointsHistory].map(day => day.points).slice(0, 15);
-                        
-                        let days = 0;
-                        let currentTotal = accountTotalPoints;
-                        // 创建一个队列来跟踪15天内的积分
-                        const pointsQueue = [...recentValidPoints];
-                        
-                        // 模拟未来每天的积分变化，直到达到目标
-                        while (currentTotal < target) {
-                          days++;
-                          // 基于默认每天16分来预测未来积分获取
-                          const dailyPoints = averagePointsPerDay;
-                          
-                          // 添加当天的新积分
-                          pointsQueue.unshift(dailyPoints);
-                          
-                          // 如果队列长度超过15，移除最早的积分（过期）
-                          let expiredPoints = 0;
-                          if (pointsQueue.length > 15) {
-                            expiredPoints = pointsQueue.pop() || 0;
-                          }
-                          
-                          // 重新计算当前总积分
-                          currentTotal = pointsQueue.reduce((sum, points) => sum + points, 0);
-                          
-                          // 防止无限循环
-                          if (days > 1000) {
-                            break; // 退出循环，但保持之前设置的简单计算结果
-                          }
-                        }
-                        
-                        // 如果成功计算出结果，使用复杂计算的结果
-                        if (days <= 1000) {
-                          accountDaysToTarget = days;
-                        }
-                      } catch (error) {
-                        console.error('计算距离目标天数时出错:', error);
-                        // 出错时保持之前设置的简单计算结果
-                      }
-                    }
-                  }
-                  
-                  return (
-                    <tr key={account.id} className={account.id === currentAccountId ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {account.name}
-                        {account.id === currentAccountId && <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">当前</span>}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">
-                        {accountTotalPoints}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">
-                        {account.targetPoints || '--'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {account.targetPoints ? (
-                          accountDaysToTarget !== null ? (
-                            <span className={accountDaysToTarget === 0 ? 'text-green-600 dark:text-green-400 font-medium' : 'text-orange-600 dark:text-orange-400'}>
-                              {accountDaysToTarget === 0 ? '已达成' : `${accountDaysToTarget} 天`}
-                            </span>
-                          ) : (
-                            '计算中...'
-                          )
+            <table className="w-full min-w-[400px]">
+              <tbody>
+                <tr>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      目标进度: {targetPoints ? `${totalPoints}/${targetPoints}` : '--'}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    <div className="w-40 sm:w-48 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      {targetPoints ? (
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                          style={{
+                            width: `${Math.min((totalPoints / targetPoints) * 100, 100)}%`,
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full bg-slate-300 dark:bg-slate-600 w-1/2" />
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    {targetPoints ? (
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {Math.round(Math.min((totalPoints / targetPoints) * 100, 100))}%
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">未设置目标</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    {targetPoints && daysToTarget !== null ? (
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                        {daysToTarget === 0 ? (
+                          '已达成目标！'
                         ) : (
-                          <span className="text-gray-400 dark:text-gray-500">未设置目标</span>
+                          `预计还需 ${daysToTarget} 天`
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">未设置目标</span>
+                    )}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto">
+      <main className="container mx-auto px-4 py-4 sm:py-6">
         {/* 控制面板 */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* 开始日期选择 */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
@@ -726,7 +658,7 @@ export default function AlphaPointsCalculator() {
                 type="date"
                 value={getTodayFormatted()}
                 onChange={handleDateChange}
-                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
 
@@ -740,97 +672,94 @@ export default function AlphaPointsCalculator() {
                 value={targetPoints}
                 onChange={handleTargetChange}
                 placeholder="请输入目标积分"
-                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
           </div>
         </div>
 
         {/* 总览卡片 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 text-center">
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">今日积分</p>
-            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400">
               {pointsHistory.length > 0 ? pointsHistory[0].points : 0}
             </p>
             <button 
               onClick={generatePointsHistory} 
-              className="mt-2 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:hover:bg-blue-900 dark:text-blue-200 rounded-md text-sm transition-colors"
+              className="mt-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:hover:bg-blue-900 dark:text-blue-200 rounded-md text-sm transition-colors w-full sm:w-auto"
             >
               生成今天记录
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 text-center">
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">累计积分</p>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-400">{totalPoints}</p>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">{totalPoints}</p>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-6 text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-4 text-center">
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-1">距离目标</p>
             {daysToTarget !== null ? (
-              <p className={`text-3xl font-bold ${daysToTarget === 0 ? 'text-purple-600 dark:text-purple-400' : 'text-orange-600 dark:text-orange-400'}`}>
+              <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${daysToTarget === 0 ? 'text-purple-600 dark:text-purple-400' : 'text-orange-600 dark:text-orange-400'}`}>
                 {daysToTarget === 0 ? '已达成' : `${daysToTarget} 天`}
               </p>
             ) : (
-              <p className="text-3xl font-bold text-slate-400">--</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-400">--</p>
             )}
           </div>
         </div>
 
-        {/* 积分历史表格 */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden">
+        {/* 积分历史表格 - 优化手机端显示 */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden mb-6">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[400px]">
               <thead className="bg-slate-100 dark:bg-slate-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">日期</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">当日积分</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">累计积分</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">日期</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">当日积分</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">累计积分</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {pointsHistory.map((day, index) => (
                   <tr key={index} className={index === 0 ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">
                       {day.date}
                       {index === 0 && <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">今天</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm">
                       {editingIndex === index ? (
                         <div className="flex items-center space-x-2">
                           <input
                             type="text"
                             value={tempPoints}
                             onChange={handleTempPointsChange}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') updateDayPoints(index, tempPoints);
-                              if (e.key === 'Escape') cancelEditing();
-                            }}
+                            onBlur={() => updateDayPoints(index, tempPoints)}
+                            onKeyDown={(e) => e.key === 'Enter' && updateDayPoints(index, tempPoints)}
+                            className="w-20 px-2 py-1 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
                             autoFocus
-                            className="w-24 px-2 py-1 border border-blue-300 dark:border-blue-600 rounded-md bg-blue-50 dark:bg-blue-900/30 text-slate-900 dark:text-slate-100"
                           />
                           <button
                             onClick={() => updateDayPoints(index, tempPoints)}
-                            className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                            aria-label="保存"
+                            className="px-2 py-1 bg-blue-500 text-white rounded"
                           >
                             ✓
                           </button>
                           <button
                             onClick={cancelEditing}
-                            className="px-2 py-1 bg-gray-300 dark:bg-gray-600 text-slate-800 dark:text-slate-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-                            aria-label="取消"
+                            className="px-2 py-1 bg-gray-300 dark:bg-gray-600 text-slate-900 dark:text-slate-100 rounded"
                           >
                             ✗
                           </button>
                         </div>
                       ) : (
-                        <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors" onClick={() => startEditing(index)}>
+                        <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors group"
+                             onClick={() => startEditing(index)}>
                           <span className="text-slate-500 dark:text-slate-300">{day.points}</span>
                           <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-400">点击编辑</span>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{day.cumulativePoints}</td>
+                    <td className="px-4 py-3 sm:py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{day.cumulativePoints}</td>
                   </tr>
                 ))}
               </tbody>
@@ -838,10 +767,10 @@ export default function AlphaPointsCalculator() {
           </div>
         </div>
 
-        {/* 信息提示 */}
+        {/* 信息提示 - 响应式调整 */}
         {daysToTarget !== null && daysToTarget > 0 && (
-          <div className="mt-8 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <p className="text-orange-800 dark:text-orange-200">
+          <div className="mt-6 p-3 sm:p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <p className="text-orange-800 dark:text-orange-200 text-sm">
               按照当前速度，您将在 <span className="font-bold">{daysToTarget} 天</span> 后达到目标积分 {targetPoints} 分。
               预计完成日期：{new Date(Date.now() + daysToTarget * 24 * 60 * 60 * 1000).toLocaleDateString('zh-CN')}
             </p>
@@ -849,18 +778,18 @@ export default function AlphaPointsCalculator() {
         )}
 
         {daysToTarget === 0 && (
-          <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-green-800 dark:text-green-200">
+          <div className="mt-6 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-green-800 dark:text-green-200 text-sm">
               <span className="font-bold">恭喜您！</span> 您已达到目标积分 {targetPoints} 分。
             </p>
           </div>
         )}
       </main>
 
-      {/* 添加账号模态框 */}
+      {/* 添加账号模态框 - 响应式优化 */}
       {showAddAccountModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-5 max-w-md w-full mx-auto">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">添加新账号</h2>
             <div className="space-y-4">
               <div>
@@ -873,7 +802,7 @@ export default function AlphaPointsCalculator() {
                   onChange={(e) => setNewAccountName(e.target.value)}
                   placeholder="请输入账号名称"
                   autoFocus
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
               </div>
               <div className="flex justify-end space-x-3 pt-2">
@@ -882,13 +811,13 @@ export default function AlphaPointsCalculator() {
                     setShowAddAccountModal(false);
                     setNewAccountName('');
                   }}
-                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-sm"
                 >
                   取消
                 </button>
                 <button
                   onClick={() => createAccount(newAccountName)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
                 >
                   创建
                 </button>
@@ -898,7 +827,7 @@ export default function AlphaPointsCalculator() {
         </div>
       )}
 
-      <footer className="max-w-4xl mx-auto mt-12 text-center text-sm text-slate-500 dark:text-slate-400">
+      <footer className="max-w-4xl mx-auto mt-8 sm:mt-12 px-4 py-4 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400">
         <p>© {new Date().getFullYear()} 币安 Alpha 积分计算器 | 基于 Next.js 构建</p>
       </footer>
     </div>
