@@ -526,14 +526,14 @@ export default function AlphaPointsCalculator() {
 
         // 获取目标积分（如果有）
         const targetPoints = account.targetPoints && !isNaN(parseInt(account.targetPoints)) ?
-          parseInt(account.targetPoints) : null;
+          parseInt(account.targetPoints) : 999999999;
 
         // 计算距离目标的百分比
         const progressPercentage = targetPoints ?
           Math.min((totalPoints / targetPoints) * 100, 100) : null;
 
         // 计算距离目标的积分差
-        const pointsToTarget = targetPoints ? targetPoints - totalPoints : null;
+        const pointsToTarget = targetPoints ? targetPoints - totalPoints : -999999999;
 
         // 计算达到目标所需天数（考虑积分过期和用户实际情况）
         let daysToTarget = null;
