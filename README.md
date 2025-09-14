@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js 项目
 
-## Getting Started
+这个项目是使用 Next.js 创建的一个基础应用。
 
-First, run the development server:
+## 技术栈
+
+- Next.js 15.5.2
+- React 19.1.0
+- TypeScript
+- Tailwind CSS
+
+## 项目结构
+
+```
+app/
+  favicon.ico
+  globals.css
+  layout.tsx
+  page.tsx
+public/
+  静态资源文件
+next.config.ts
+package.json
+postcss.config.mjs
+tsconfig.json
+```
+
+## 快速开始
+
+### 安装依赖
+
+```bash
+npm install
+```
+
+### 开发服务器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+应用将在 http://localhost:3000 启动
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 构建生产版本
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+### 启动生产服务器
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 功能说明
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+这是一个基础的 Next.js 应用模板，包含了以下功能：
 
-## Deploy on Vercel
+- 响应式设计
+- 支持 TypeScript
+- 集成 Tailwind CSS
+- 快速开发体验
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 开发提示
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 编辑 `app/page.tsx` 来修改首页内容
+- 使用 `app/layout.tsx` 来设置全局布局
+- 全局样式可以在 `app/globals.css` 中修改
+- 静态资源放在 `public` 目录下
