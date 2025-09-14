@@ -31,6 +31,8 @@ export default function AlphaPointsCalculator() {
   const [newAccountName, setNewAccountName] = useState<string>('');
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
   const [fileInputKey, setFileInputKey] = useState<number>(0); // 用于重置文件输入
+  const [showAccountsSummary, setShowAccountsSummary] = useState<boolean>(false);
+  const [accountsSummary, setAccountsSummary] = useState<any[]>([]);
 
   // 导出数据函数
   const exportData = () => {
@@ -57,7 +59,6 @@ export default function AlphaPointsCalculator() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('导出数据失败:', error);
       alert('导出数据失败，请重试。');
@@ -82,7 +83,7 @@ export default function AlphaPointsCalculator() {
           }
 
           // 简单验证每个账号的数据结构
-          const validData = importedData.every((item: any) => 
+          const validData = importedData.every((item: any) =>
             item.id && typeof item.name === 'string' && Array.isArray(item.pointsHistory)
           );
 
@@ -93,14 +94,14 @@ export default function AlphaPointsCalculator() {
           // 确认是否替换现有数据
           if (window.confirm('导入数据将替换现有所有数据，确定要继续吗？')) {
             setAccounts(importedData);
-            
+
             // 如果有导入的账号，选择第一个作为当前账号
             if (importedData.length > 0) {
               setCurrentAccountId(importedData[0].id);
               setCurrentAccount(importedData[0]);
               setPointsHistory(importedData[0].pointsHistory || []);
               setTargetPoints(importedData[0].targetPoints || '');
-              
+
               // 重新计算累计积分
               recalculateCumulativePoints(importedData[0].pointsHistory || []);
             }
@@ -121,7 +122,7 @@ export default function AlphaPointsCalculator() {
       console.error('导入数据失败:', error);
       alert('导入数据失败，请重试。');
     }
-    
+
     // 重置文件输入，以便可以再次选择同一文件
     setFileInputKey(prev => prev + 1);
     event.target.value = '';
@@ -145,7 +146,7 @@ export default function AlphaPointsCalculator() {
 
           // 重新计算累计积分
           recalculateCumulativePoints(accountsData[0].pointsHistory);
-          
+
           // 生成今天的记录（如果不存在）
           setTimeout(() => {
             generatePointsHistory();
@@ -288,7 +289,7 @@ export default function AlphaPointsCalculator() {
         // 只保留最近15天的有效积分
         const recentValidPoints = [...pointsHistory].map(day => day.points).slice(0, 15);
 
-        let days = 0;
+        let days = 1;
         let currentTotal = totalPoints;
         // 创建一个队列来跟踪15天内的积分
         const pointsQueue = [...recentValidPoints];
@@ -387,16 +388,16 @@ export default function AlphaPointsCalculator() {
       month: '2-digit',
       day: '2-digit'
     });
-    
+
     // 检查是否已经有今天的记录
     const todayIndex = history.findIndex(day => day.date === todayStr);
-    
+
     if (todayIndex !== -1) {
       // 如果已经有今天的记录，确保它使用正确的积分值
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       const points = todayDate >= startDateObj ? pointsPerDay : 0;
-      
+
       // 只有当没有保存的数据时才更新今天的积分
       if (!savedHistoryMap.has(todayStr)) {
         history[todayIndex].points = points;
@@ -406,14 +407,14 @@ export default function AlphaPointsCalculator() {
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
       const points = todayDate >= startDateObj ? pointsPerDay : 0;
-      
+
       // 将今天的记录添加到历史的开头
       history.unshift({
         date: todayStr,
         points: points,
         cumulativePoints: 0
       });
-      
+
       // 如果历史记录超过了指定的天数，移除最旧的记录
       if (history.length > daysToShow) {
         history.pop();
@@ -514,6 +515,94 @@ export default function AlphaPointsCalculator() {
     return `${year}-${month}-${day}`;
   };
 
+  // 查看所有账号汇总信息
+  const viewAllAccountsSummary = () => {
+    try {
+      // 为每个账号计算相关信息
+      const summary = accounts.map(account => {
+        // 计算累计积分
+        const totalPoints = account.pointsHistory ?
+          account.pointsHistory.reduce((sum, day) => sum + day.points, 0) : 0;
+
+        // 获取目标积分（如果有）
+        const targetPoints = account.targetPoints && !isNaN(parseInt(account.targetPoints)) ?
+          parseInt(account.targetPoints) : null;
+
+        // 计算距离目标的百分比
+        const progressPercentage = targetPoints ?
+          Math.min((totalPoints / targetPoints) * 100, 100) : null;
+
+        // 计算距离目标的积分差
+        const pointsToTarget = targetPoints ? targetPoints - totalPoints : null;
+
+        // 计算达到目标所需天数（考虑积分过期和用户实际情况）
+        let daysToTarget = null;
+        if (targetPoints) {
+          if (pointsToTarget <= 0) {
+            daysToTarget = 0;
+          } else {
+            // 使用更精确的计算方式，考虑积分过期
+            // 只保留最近15天的有效积分
+            const recentValidPoints = account.pointsHistory ?
+              [...account.pointsHistory].map(day => day.points).slice(0, 15) : [];
+
+            let days = 1;
+            let currentTotal = totalPoints;
+            // 创建一个队列来跟踪15天内的积分
+            const pointsQueue = [...recentValidPoints];
+            // 计算用户的平均每日积分获取量（如果有足够的历史数据）
+            // 恢复动态计算平均积分的逻辑以获得更准确的预计天数
+            const averagePointsPerDay = 16
+            // 模拟未来每天的积分变化，直到达到目标
+            while (currentTotal < targetPoints) {
+              days++;
+              // 基于用户历史平均积分来预测未来积分获取
+              const dailyPoints = averagePointsPerDay;
+
+              // 添加当天的新积分
+              pointsQueue.unshift(dailyPoints);
+
+              // 如果队列长度超过15，移除最早的积分（过期）
+              let expiredPoints = 0;
+              if (pointsQueue.length > 15) {
+                expiredPoints = pointsQueue.pop() || 0;
+              }
+
+              // 重新计算当前总积分
+              currentTotal = pointsQueue.reduce((sum, points) => sum + points, 0);
+
+              // 防止无限循环（如果目标过高，设置一个合理的上限）
+              if (days > 1000) {
+                daysToTarget = null; // 表示无法在合理时间内达到
+                break;
+              }
+            }
+            daysToTarget = days
+            // 修复逻辑：无论daysToTarget之前是否为null，只要没有达到无限循环条件，就设置为计算出的天数
+            if (daysToTarget !== null) {
+              daysToTarget = days;
+            }
+          }
+        }
+
+        return {
+          name: account.name,
+          totalPoints: totalPoints,
+          targetPoints: targetPoints,
+          progressPercentage: progressPercentage,
+          pointsToTarget: pointsToTarget,
+          daysToTarget: daysToTarget
+        };
+      });
+
+      setAccountsSummary(summary);
+      setShowAccountsSummary(true);
+    } catch (error) {
+      console.error('获取账号汇总信息失败:', error);
+      alert('获取账号汇总信息失败，请重试。');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       {/* 头部 */}
@@ -531,7 +620,7 @@ export default function AlphaPointsCalculator() {
               币安 Alpha 积分计算器
             </h1>
           </div>
-      
+
           {/* 账号管理 */}
           <div className="flex flex-wrap gap-2 w-full">
             {/* 账号选择器 */}
@@ -546,6 +635,14 @@ export default function AlphaPointsCalculator() {
                 </option>
               ))}
             </select>
+
+            {/* 查看所有账号汇总按钮 */}
+            <button
+              onClick={viewAllAccountsSummary}
+              className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors text-sm whitespace-nowrap"
+            >
+              所有账号汇总
+            </button>
 
             {/* 删除账号按钮 */}
             {accounts.length > 1 && (
@@ -590,7 +687,7 @@ export default function AlphaPointsCalculator() {
             />
           </div>
         </div>
-        
+
         {/* 目标积分进度 */}
         <div className="container mx-auto px-4 py-3 border-t border-slate-200 dark:border-slate-700">
           <div className="overflow-x-auto">
@@ -685,8 +782,8 @@ export default function AlphaPointsCalculator() {
             <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 dark:text-blue-400">
               {pointsHistory.length > 0 ? pointsHistory[0].points : 0}
             </p>
-            <button 
-              onClick={generatePointsHistory} 
+            <button
+              onClick={generatePointsHistory}
               className="mt-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:hover:bg-blue-900 dark:text-blue-200 rounded-md text-sm transition-colors w-full sm:w-auto"
             >
               生成今天记录
@@ -753,7 +850,7 @@ export default function AlphaPointsCalculator() {
                         </div>
                       ) : (
                         <div className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded transition-colors group"
-                             onClick={() => startEditing(index)}>
+                          onClick={() => startEditing(index)}>
                           <span className="text-slate-500 dark:text-slate-300">{day.points}</span>
                           <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-400">点击编辑</span>
                         </div>
@@ -822,6 +919,74 @@ export default function AlphaPointsCalculator() {
                   创建
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 所有账号汇总模态框 */}
+      {showAccountsSummary && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-5 max-w-4xl w-full mx-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">所有账号积分汇总</h2>
+              <button
+                onClick={() => setShowAccountsSummary(false)}
+                className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+              >
+                关闭
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead className="bg-slate-100 dark:bg-slate-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">账号名称</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">累计积分</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">目标积分</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">完成进度</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">距离目标</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">预计天数</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {accountsSummary.map((account, index) => (
+                    <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{account.name}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{account.totalPoints}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">{account.targetPoints || '--'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {account.progressPercentage ? (
+                          <div className="flex items-center space-x-2">
+                            <div className="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                                style={{ width: `${account.progressPercentage}%` }}
+                              />
+                            </div>
+                            <span className="text-slate-500 dark:text-slate-300">
+                              {Math.round(account.progressPercentage)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-500">未设置目标</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">
+                        {account.pointsToTarget === null ? '--' :
+                          account.pointsToTarget <= 0 ? '已达成' :
+                            `还需 ${account.pointsToTarget} 分`}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-300">
+                        {account.daysToTarget === null ? '--' :
+                          account.daysToTarget === 0 ? '已达成' :
+                            `${account.daysToTarget} 天`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
