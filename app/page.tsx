@@ -21,7 +21,7 @@ export default function AlphaPointsCalculator() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [currentAccountId, setCurrentAccountId] = useState<string>('');
   const [pointsHistory, setPointsHistory] = useState<DailyPoint[]>([]);
-  const [targetPoints, setTargetPoints] = useState<string>('');
+  const [targetPoints, setTargetPoints] = useState<number>('');
   const [daysToTarget, setDaysToTarget] = useState<number | null>(null);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date>(new Date());
@@ -494,7 +494,7 @@ export default function AlphaPointsCalculator() {
           account.pointsHistory.reduce((sum, day) => sum + day.points, 0) : 0;
 
         // 获取目标积分（如果有）
-        const targetPoints = account.targetPoints && !isNaN(parseInt(account.targetPoints)) ?
+        const targetPoints : number = account.targetPoints && !isNaN(parseInt(account.targetPoints)) ?
           parseInt(account.targetPoints) : 999999999;
 
         // 计算距离目标的百分比
