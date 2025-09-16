@@ -33,6 +33,7 @@ export default function AlphaPointsCalculator() {
   const [fileInputKey, setFileInputKey] = useState<number>(0); // 用于重置文件输入
   const [showAccountsSummary, setShowAccountsSummary] = useState<boolean>(false);
   const [accountsSummary, setAccountsSummary] = useState<any[]>([]);
+  const queueMaxLength = 16;
 
   // 导出数据函数
   const exportData = () => {
@@ -131,6 +132,8 @@ export default function AlphaPointsCalculator() {
   // 从localStorage加载数据
   useEffect(() => {
     const savedAccounts = localStorage.getItem('alphaCalculatorAccounts');
+    const lastUpdateDate = localStorage.getItem('lastUpdateDate');
+    const today = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
     if (savedAccounts) {
       try {
@@ -150,6 +153,13 @@ export default function AlphaPointsCalculator() {
           // 生成今天的记录（如果不存在）
           setTimeout(() => {
             generatePointsHistory();
+            
+            // 检查是否需要更新前一天的积分
+            // 当最后更新日期不是今天时，将前一天的0分更新为16分
+            if (lastUpdateDate !== today) {
+              updatePreviousDayPoints();
+              localStorage.setItem('lastUpdateDate', today);
+            }
           }, 0);
         }
       } catch (error) {
@@ -162,6 +172,23 @@ export default function AlphaPointsCalculator() {
       createDefaultAccount();
     }
   }, []);
+
+  // 更新前一天的积分（将0分变为16分）
+  const updatePreviousDayPoints = () => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    const yesterdayStr = yesterday.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    
+    // 查找昨天的记录索引
+    const yesterdayIndex = pointsHistory.findIndex(day => day.date === yesterdayStr);
+    
+    if (yesterdayIndex !== -1 && pointsHistory[yesterdayIndex].points === 0) {
+      // 如果找到了昨天的记录并且积分为0（表示是自动生成的记录），则更新为16分
+      updateDayPoints(yesterdayIndex, queueMaxLength);
+    }
+  };
 
   // 创建默认账号
   const createDefaultAccount = () => {
@@ -287,7 +314,7 @@ export default function AlphaPointsCalculator() {
 
         // 创建一个准确的模型来模拟积分过期
         // 只保留最近15天的有效积分
-        const recentValidPoints = [...pointsHistory].map(day => day.points).slice(0, 15);
+        const recentValidPoints = [...pointsHistory].map(day => day.points).slice(0, queueMaxLength);
 
         let days = 1;
         let currentTotal = totalPoints;
@@ -305,7 +332,7 @@ export default function AlphaPointsCalculator() {
 
           // 如果队列长度超过15，移除最早的积分（过期）
           let expiredPoints = 0;
-          if (pointsQueue.length > 15) {
+          if (pointsQueue.length > 16) {
             expiredPoints = pointsQueue.pop() || 0;
           }
 
@@ -319,70 +346,21 @@ export default function AlphaPointsCalculator() {
           }
         }
 
-        setDaysToTarget(days);
+        setDaysToTarget(days - 1);
       }
     } else {
       setDaysToTarget(null);
     }
   }, [targetPoints, totalPoints, pointsHistory]);
 
-  // 生成积分历史记录
+  // 生成今天记录函数
   const generatePointsHistory = () => {
-    const history: DailyPoint[] = [];
-    const pointsPerDay = 16;
-    const daysToShow = 15;
+    // 创建一个新的历史记录数组，基于现有数据的副本
+    const history: DailyPoint[] = [...pointsHistory];
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 设置为今天的开始时间
 
-    // 检查是否有保存的历史数据
-    const savedHistoryMap = new Map<string, number>();
-    pointsHistory.forEach(day => {
-      savedHistoryMap.set(day.date, day.points);
-    });
-
-    // 处理开始日期
-    const startDateObj = new Date(startDate);
-    startDateObj.setHours(0, 0, 0, 0);
-
-    // 总是从今天开始生成数据，确保今天的数据存在
-    for (let i = 0; i < daysToShow; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() - i);
-
-      // 格式化日期为字符串
-      const dateStr = date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-
-      // 检查是否有保存的积分数据
-      if (savedHistoryMap.has(dateStr)) {
-        // 使用保存的数据
-        const points = savedHistoryMap.get(dateStr)!;
-        history.push({
-          date: dateStr,
-          points: points,
-          cumulativePoints: 0 // 将在后面重新计算
-        });
-      } else {
-        // 对于没有保存数据的日期，判断是否在开始日期之后
-        const currentDate = new Date(date);
-        currentDate.setHours(0, 0, 0, 0);
-
-        // 如果日期在开始日期或之后，使用默认积分值
-        // 否则（开始日期之前），积分为0
-        const points = currentDate >= startDateObj ? pointsPerDay : 0;
-
-        history.push({
-          date: dateStr,
-          points: points,
-          cumulativePoints: 0 // 将在后面重新计算
-        });
-      }
-    }
-
-    // 确保今天的记录存在（强制覆盖今天的数据）
+    // 格式化今天的日期
     const todayStr = today.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
@@ -392,33 +370,24 @@ export default function AlphaPointsCalculator() {
     // 检查是否已经有今天的记录
     const todayIndex = history.findIndex(day => day.date === todayStr);
 
-    if (todayIndex !== -1) {
-      // 如果已经有今天的记录，确保它使用正确的积分值
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
-      const points = todayDate >= startDateObj ? pointsPerDay : 0;
+    // 创建今天的记录，积分为0
+    const todayRecord = {
+      date: todayStr,
+      points: 0, // 今天的积分为0
+      cumulativePoints: 0
+    };
 
-      // 只有当没有保存的数据时才更新今天的积分
-      if (!savedHistoryMap.has(todayStr)) {
-        history[todayIndex].points = points;
+    if (todayIndex !== -1) {
+      // 如果已经有今天的记录，更新它的积分，但保持其他属性不变
+      history[todayIndex].points = 0;
+      // 如果今天的记录不在最前面，将其移到最前面
+      if (todayIndex !== 0) {
+        const [todayEntry] = history.splice(todayIndex, 1);
+        history.unshift(todayEntry);
       }
     } else {
-      // 如果没有今天的记录，添加一个
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
-      const points = todayDate >= startDateObj ? pointsPerDay : 0;
-
-      // 将今天的记录添加到历史的开头
-      history.unshift({
-        date: todayStr,
-        points: points,
-        cumulativePoints: 0
-      });
-
-      // 如果历史记录超过了指定的天数，移除最旧的记录
-      if (history.length > daysToShow) {
-        history.pop();
-      }
+      // 如果没有今天的记录，添加一个积分为0的记录到最前面
+      history.unshift(todayRecord);
     }
 
     // 重新计算累计积分
@@ -541,18 +510,24 @@ export default function AlphaPointsCalculator() {
           if (pointsToTarget <= 0) {
             daysToTarget = 0;
           } else {
-            // 使用更精确的计算方式，考虑积分过期
+            // 使用更精确的计算方式，考虑积分过期和T+1规则
             // 只保留最近15天的有效积分
             const recentValidPoints = account.pointsHistory ?
-              [...account.pointsHistory].map(day => day.points).slice(0, 15) : [];
+              [...account.pointsHistory].map(day => day.points).slice(0, queueMaxLength) : [];
 
             let days = 1;
             let currentTotal = totalPoints;
             // 创建一个队列来跟踪15天内的积分
             const pointsQueue = [...recentValidPoints];
             // 计算用户的平均每日积分获取量（如果有足够的历史数据）
-            // 恢复动态计算平均积分的逻辑以获得更准确的预计天数
+            // 排除今天的数据，符合T+1规则
+            const validHistoryPoints = account.pointsHistory ?
+              [...account.pointsHistory].filter((day, index) => index > 0) // 排除今天的数据
+                .map(day => day.points).slice(0, queueMaxLength) : [];
+            
+            // 计算平均积分，避免除以0
             const averagePointsPerDay = 16
+
             // 模拟未来每天的积分变化，直到达到目标
             while (currentTotal < targetPoints) {
               days++;
@@ -564,7 +539,7 @@ export default function AlphaPointsCalculator() {
 
               // 如果队列长度超过15，移除最早的积分（过期）
               let expiredPoints = 0;
-              if (pointsQueue.length > 15) {
+              if (pointsQueue.length > queueMaxLength) {
                 expiredPoints = pointsQueue.pop() || 0;
               }
 
@@ -580,7 +555,7 @@ export default function AlphaPointsCalculator() {
             daysToTarget = days
             // 修复逻辑：无论daysToTarget之前是否为null，只要没有达到无限循环条件，就设置为计算出的天数
             if (daysToTarget !== null) {
-              daysToTarget = days;
+              daysToTarget = days - 1;
             }
           }
         }
