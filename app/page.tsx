@@ -21,7 +21,7 @@ export default function AlphaPointsCalculator() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [currentAccountId, setCurrentAccountId] = useState<string>('');
   const [pointsHistory, setPointsHistory] = useState<DailyPoint[]>([]);
-  const [targetPoints, setTargetPoints] = useState<number>('');
+  const [targetPoints, setTargetPoints] = useState<number>(0);
   const [daysToTarget, setDaysToTarget] = useState<number | null>(null);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [startDate, setStartDate] = useState<Date>(new Date());
