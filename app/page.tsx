@@ -13,7 +13,7 @@ interface Account {
   id: string;
   name: string;
   pointsHistory: DailyPoint[];
-  targetPoints: string;
+  targetPoints: number;
 }
 
 export default function AlphaPointsCalculator() {
