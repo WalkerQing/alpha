@@ -196,7 +196,7 @@ export default function AlphaPointsCalculator() {
       id: Date.now().toString(),
       name: '默认账号',
       pointsHistory: [],
-      targetPoints: ''
+      targetPoints: 0
     };
 
     setAccounts([defaultAccount]);
@@ -246,7 +246,7 @@ export default function AlphaPointsCalculator() {
       id: Date.now().toString(),
       name: name.trim(),
       pointsHistory: [],
-      targetPoints: ''
+      targetPoints: 0
     };
 
     const updatedAccounts = [...accounts, newAccount];
